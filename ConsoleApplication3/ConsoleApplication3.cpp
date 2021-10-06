@@ -13,34 +13,57 @@ typedef struct
 	char digits[MAXDIGITS];
 	int signbit;
 	int lastdigit;
+
 } bignum;
 void main();
-void print_bignum(bignum n);
+void print_bignum(bignum n);//
 int kiemtra(char s[]);
 void scan_bignum(bignum &n);
-void zero_justify(bignum n);
-void add_bignum(bignum a, bignum b, bignum& c);
-void subtract_bignum(bignum a, bignum b, bignum& c);
-int max(int a, int b);
-int compare_bignum(bignum a, bignum b);
-void digit_shift(bignum& n, int d);
-void multiply_bignum(bignum a, bignum b, bignum& c);
-void initialize_bignum(bignum& n);
-void int_to_bignum(int s, bignum& n);
-void divide_bignum(bignum a, bignum b, bignum &c);
+void zero_justify(bignum n);//
+void add_bignum(bignum a, bignum b, bignum& c);//
+void subtract_bignum(bignum a, bignum b, bignum& c);//
+int max(int a, int b);//
+int compare_bignum(bignum a, bignum b);//
+void digit_shift(bignum& n, int d);//
+void multiply_bignum(bignum a, bignum b, bignum& c);//
+void initialize_bignum(bignum& n);//
+void int_to_bignum(int s, bignum& n);//
+void divide_bignum(bignum a, bignum b, bignum &c);//
+void string_to_bignum(string s, bignum& n);
+void delete_0(bignum& a);
 // cai 
 void main()
 {
 	do {
-		bignum a, b, c;
-		cout << "nhap vao so lon a:";
+		bignum a,b,the;
 		scan_bignum(a);
-		cout << "nhap vao so lon b:";
 		scan_bignum(b);
-		divide_bignum(a, b, c);
-		print_bignum(c);
-		cout << endl;
+		subtract_bignum(a, b, the);
+		
+		print_bignum(the);
 	} while (_getch() != 27);
+}
+void delete_0(bignum &a)
+{
+	a.signbit = a.signbit;
+	while (a.digits[a.lastdigit] == 0)
+	{
+		a.lastdigit = a.lastdigit - 1;
+	}
+}
+void string_to_bignum(string s, bignum &n) {
+	n.signbit = PLUS; // TODO: currently no negative numbers
+
+	for (int i = 0; i < MAXDIGITS; i++) n.digits[i] = (char)0;
+
+	n.lastdigit = -1;
+
+	for (int i = s.size() - 1; i >= 0; i--) {
+		n.lastdigit++;
+		n.digits[n.lastdigit] = s[i] - 48;
+	}
+
+	if (s == "0") n.lastdigit = 0;
 }
 int max(int a, int b)
 {
@@ -50,10 +73,14 @@ void print_bignum(bignum n)
 {
 	int i;
 	if (n.signbit == MINUS) cout << "-";
+	if (n.lastdigit == -1 )
+		cout << '0';
+	else
 	for (i = n.lastdigit; i >= 0; i--)
 	{
 		cout << int(n.digits[i]);
 	}
+	
 }
 int kiemtra(char s[])
 {
@@ -132,31 +159,33 @@ void add_bignum(bignum a, bignum b, bignum&c)
 			(carry + a.digits[i] + b.digits[i]) % 10;
 		carry = (carry + a.digits[i] + b.digits[i]) / 10;
 	}
-
+	
 	zero_justify(c);
+	delete_0(c);
 }
 void subtract_bignum(bignum a, bignum b, bignum& c)
 {
-	int borrow;			/* has anything been borrowed? */
-	int v;				/* placeholder digit */
-	int i;				/* counter */
 
-	initialize_bignum(c);
-
+	int borrow; /* anything borrowed? */
+	int v; /* placeholder digit */
+	int i; /* counter */
 	if ((a.signbit == MINUS) || (b.signbit == MINUS)) {
 		b.signbit = -1 * b.signbit;
 		add_bignum(a, b, c);
 		b.signbit = -1 * b.signbit;
 		return;
 	}
-
 	if (compare_bignum(a, b) == PLUS) {
 		subtract_bignum(b, a, c);
 		c.signbit = MINUS;
 		return;
 	}
-
+	c.signbit = PLUS;
 	c.lastdigit = max(a.lastdigit, b.lastdigit);
+	for (i = a.lastdigit + 1; i <= c.lastdigit; i++)
+		a.digits[i] = 0;
+	for (i = b.lastdigit + 1; i <= c.lastdigit; i++)
+		b.digits[i] = 0;
 	borrow = 0;
 
 	for (i = 0; i <= (c.lastdigit); i++) {
@@ -167,11 +196,10 @@ void subtract_bignum(bignum a, bignum b, bignum& c)
 			v = v + 10;
 			borrow = 1;
 		}
-
 		c.digits[i] = (char)v % 10;
 	}
-
 	zero_justify(c);
+	delete_0(c);
 }
 int compare_bignum(bignum a, bignum b)
 {
@@ -208,6 +236,7 @@ void multiply_bignum(bignum a, bignum b, bignum &c)
 	}
 	c.signbit = a.signbit * b.signbit;
 	zero_justify(c);
+	delete_0(a);
 }
 void digit_shift(bignum &n, int d) 
 {
@@ -238,31 +267,32 @@ void int_to_bignum(int s, bignum &n)
 }
 void divide_bignum(bignum a, bignum b, bignum &c)
 {
-	bignum row; /* represent shifted row */
-	bignum tmp; /* placeholder bignum */
-	int asign, bsign; /* temporary signs */
-	int i, j; /* counters */
-	initialize_bignum(c);
 	c.signbit = a.signbit * b.signbit;
-	asign = a.signbit;
-	bsign = b.signbit;
-	a.signbit = PLUS;
-	b.signbit = PLUS;
-	initialize_bignum(row);
-	initialize_bignum(tmp);
-	c.lastdigit = a.lastdigit;
-	for (i = a.lastdigit; i >= 0; i--) {
-		digit_shift(row, 1);
-		row.digits[0] = a.digits[i];
-		c.digits[i] = 0;
-		while (compare_bignum(row, b) != PLUS) {
-			c.digits[i] ++;
-			subtract_bignum(row, b, tmp);
-			row = tmp;
-		}
+	bignum dem, tam;
+	if (a.signbit < 0)
+		a.signbit = a.signbit *-1;
+	if (b.signbit < 0)
+		b.signbit = b.signbit *-1;
+	dem.digits[0] = 1;
+	dem.lastdigit = 0;
+	dem.signbit = 1;
+	tam.digits[0] = 0;
+	tam.lastdigit = 0;
+	tam.signbit = 1;
+	int g = 1;
+	while (g == 1 )
+	{
+		add_bignum(tam, dem, tam);
+		subtract_bignum(a, b, a);
+		g = a.signbit;
 	}
-	zero_justify(c);
-	a.signbit = asign;
-		b.signbit = bsign;
+	subtract_bignum(tam, dem, tam);
+	for (int i = 0; i <= tam.lastdigit; i++)
+		c.digits[i] = tam.digits[i];
+	c.lastdigit = tam.lastdigit;
+	delete_0(c);
+	
+	
 }
+
 
