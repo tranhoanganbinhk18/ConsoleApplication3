@@ -19,7 +19,7 @@ void main();
 void print_bignum(bignum n);//
 int kiemtra(char s[]);
 void scan_bignum(bignum &n);
-void zero_justify(bignum n);//
+void zero_justify(bignum &n);//
 void add_bignum(bignum a, bignum b, bignum& c);//
 void subtract_bignum(bignum a, bignum b, bignum& c);//
 int max(int a, int b);//
@@ -34,14 +34,12 @@ void delete_0(bignum& a);
 // cai 
 void main()
 {
-	do {
-		bignum a,b,the;
+	
+		bignum a,b,the,c;
 		scan_bignum(a);
 		scan_bignum(b);
-		subtract_bignum(a, b, the);
-		
+		divide_bignum(a, b, the);
 		print_bignum(the);
-	} while (_getch() != 27);
 }
 void delete_0(bignum &a)
 {
@@ -119,7 +117,7 @@ void scan_bignum(bignum& n)
 		}
 	}
 }
-void zero_justify(bignum n)
+void zero_justify(bignum &n)
 {
 	while ((n.lastdigit > 0) && (n.digits[n.lastdigit] == 0))
 		n.lastdigit--;
@@ -199,7 +197,7 @@ void subtract_bignum(bignum a, bignum b, bignum& c)
 		c.digits[i] = (char)v % 10;
 	}
 	zero_justify(c);
-	delete_0(c);
+	//delete_0(c);
 }
 int compare_bignum(bignum a, bignum b)
 {
@@ -265,34 +263,33 @@ void int_to_bignum(int s, bignum &n)
 
 	if (s == 0) n.lastdigit = 0;
 }
-void divide_bignum(bignum a, bignum b, bignum &c)
+void divide_bignum(bignum a, bignum b, bignum& c)
 {
+	bignum row;                     /* represent shifted row */
+	bignum tmp;                     /* placeholder bignum */
+	int asign, bsign;		/* temporary signs */
+	int i;                        /* counters */
+	initialize_bignum(c);
 	c.signbit = a.signbit * b.signbit;
-	bignum dem, tam;
-	if (a.signbit < 0)
-		a.signbit = a.signbit *-1;
-	if (b.signbit < 0)
-		b.signbit = b.signbit *-1;
-	dem.digits[0] = 1;
-	dem.lastdigit = 0;
-	dem.signbit = 1;
-	tam.digits[0] = 0;
-	tam.lastdigit = 0;
-	tam.signbit = 1;
-	int g = 1;
-	while (g == 1 )
+	asign = a.signbit;
+	bsign = b.signbit;
+	a.signbit = PLUS;
+	b.signbit = PLUS;
+	initialize_bignum(row);
+	initialize_bignum(tmp);
+	c.lastdigit = a.lastdigit;
+	for (i = a.lastdigit; i >= 0; i--)
 	{
-		add_bignum(tam, dem, tam);
-		subtract_bignum(a, b, a);
-		g = a.signbit;
+		digit_shift(row, 1);
+		row.digits[0] = a.digits[i];
+		c.digits[i] = 0;
+		while (compare_bignum(row, b) != PLUS)
+		{
+			c.digits[i] ++;
+			subtract_bignum(row, b, tmp);
+			row = tmp;
+		}
 	}
-	subtract_bignum(tam, dem, tam);
-	for (int i = 0; i <= tam.lastdigit; i++)
-		c.digits[i] = tam.digits[i];
-	c.lastdigit = tam.lastdigit;
-	delete_0(c);
-	
-	
+	zero_justify(c);
 }
-
 
